@@ -7,16 +7,16 @@ var result = "";
 var xheight = "height * ";
 var xwidth = "width * ";
 
-function roundToTwo(num) {
-    return +(Math.round(num + "e+2") + "e-2");
+function roundToFour(num) {
+    return +(Math.round(num + "e+4") + "e-4");
 }
 
 function getPWidth(num) {
-    return roundToTwo(num / docWidth);
+    return roundToFour(num / docWidth);
 }
 
 function getPHeight(num) {
-    return roundToTwo(-num / docHeight);
+    return roundToFour(-num / docHeight);
 }
 
 function addCubic(pathName, cp1, cp2, target) {
