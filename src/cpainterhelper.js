@@ -65,6 +65,12 @@ for (var i = 0; i < myPaths.length; i++) {
         result += "Paint " + sPaintName + " = Paint(); \n";
         result += sPaintName + ".color = Color.fromRGBO(" + strokeColor.red + ", " + strokeColor.green + ", " + strokeColor.blue + ", " + opacity + "); \n";
         result += sPaintName + ".strokeWidth = " + strokeWidth + "; \n";
+        if (strokeJoin != "StrokeJoin.MITERENDJOIN") {
+            isRound = strokeJoin == "StrokeJoin.ROUNDENDJOIN";
+            result += sPaintName + ".strokeJoin = " + (isRound ? "StrokeJoin.round" : "StrokeJoin.bevel") + "; \n";
+        }
+
+        result += sPaintName + ".strokeMiterLimit = " + strokeMiterLimit + "; \n"; //TODO
         result += sPaintName + ".style = PaintingStyle.stroke; \n";
 
         result += "canvas.drawPath(" + pathName + ", " + sPaintName + "); \n";
