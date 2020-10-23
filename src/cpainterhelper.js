@@ -69,7 +69,10 @@ for (var i = 0; i < myPaths.length; i++) {
             isRound = strokeJoin == "StrokeJoin.ROUNDENDJOIN";
             result += sPaintName + ".strokeJoin = " + (isRound ? "StrokeJoin.round" : "StrokeJoin.bevel") + "; \n";
         }
-
+        if (strokeCap != "StrokeCap.BUTTENDCAP") {
+            isRound = strokeCap == "StrokeCap.ROUNDENDCAP";
+            result += sPaintName + ".strokeCap = " + (isRound ? "StrokeCap.round" : "StrokeCap.square") + "; \n";
+        }
         result += sPaintName + ".strokeMiterLimit = " + strokeMiterLimit + "; \n"; //TODO
         result += sPaintName + ".style = PaintingStyle.stroke; \n";
 
