@@ -25,8 +25,10 @@ function addCubic(pathName, cp1, cp2, target) {
     return res;
 }
 
+
 for (var i = 0; i < myPaths.length; i++) {
-    var myPath = myPaths[i];
+    var invertedIndex = ((myPaths.length - 1) - i);
+    var myPath = myPaths[invertedIndex];
     var isClosed = myPath.closed;
     var isFilled = myPath.filled;
     var isStroked = myPath.stroked
@@ -48,6 +50,7 @@ for (var i = 0; i < myPaths.length; i++) {
         bgColor = myPath.fillColor;
         result += "Paint " + fPaintName + " = Paint(); \n";
         result += fPaintName + ".color = Color.fromRGBO(" + bgColor.red + ", " + bgColor.green + ", " + bgColor.blue + ", 1.0); \n";
+
         result += "canvas.drawPath(" + pathName + ", " + fPaintName + "); \n";
     }
     if (isStroked) {
@@ -62,6 +65,7 @@ for (var i = 0; i < myPaths.length; i++) {
         result += sPaintName + ".color = Color.fromRGBO(" + strokeColor.red + ", " + strokeColor.green + ", " + strokeColor.blue + ", 1.0); \n";
         result += sPaintName + ".strokeWidth = " + strokeWidth + "; \n";
         result += sPaintName + ".style = PaintingStyle.stroke; \n";
+
         result += "canvas.drawPath(" + pathName + ", " + sPaintName + "); \n";
     }
     result += "\n";
