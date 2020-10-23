@@ -69,7 +69,6 @@ for (var i = 0; i < myPaths.length; i++) {
         } else if (bgColor.typename == "GradientColor") {
             var gradientName = "fgradient" + i;
             if (bgColor.gradient.type == "GradientType.RADIAL") {
-                alert(bgColor.origin);
                 var gcolors = [];
                 var gstops = [];
                 for (var k = 0; k < bgColor.gradient.gradientStops.length; k++) {
@@ -83,7 +82,6 @@ for (var i = 0; i < myPaths.length; i++) {
                 result += "var " + gradientName + " = RadialGradient(\ncenter: const Alignment(";
                 result += (getPWidth(bgColor.origin[0]) * 2 - 1) + ", " + (getPHeight(bgColor.origin[1]) * 2 - 1) + "), \n";
                 result += "radius: " + bgColor.length / 1000 + ", \n";
-                alert(bgColor.length);
                 result += "colors: [\n";
                 for (var k = 0; k < gcolors.length; k++) {
                     result += gcolors[k] + ", \n";
