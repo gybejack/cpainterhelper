@@ -32,6 +32,7 @@ for (var i = 0; i < myPaths.length; i++) {
     var isClosed = myPath.closed;
     var isFilled = myPath.filled;
     var isStroked = myPath.stroked
+    var opacity = myPath.opacity / 100;
     var myPoints = myPath.pathPoints;
     var pathName = "path" + i;
     var paintName = "paint" + i;
@@ -49,7 +50,7 @@ for (var i = 0; i < myPaths.length; i++) {
         var bgColor = new RGBColor();
         bgColor = myPath.fillColor;
         result += "Paint " + fPaintName + " = Paint(); \n";
-        result += fPaintName + ".color = Color.fromRGBO(" + bgColor.red + ", " + bgColor.green + ", " + bgColor.blue + ", 1.0); \n";
+        result += fPaintName + ".color = Color.fromRGBO(" + bgColor.red + ", " + bgColor.green + ", " + bgColor.blue + ", " + opacity + "); \n";
 
         result += "canvas.drawPath(" + pathName + ", " + fPaintName + "); \n";
     }
@@ -62,7 +63,7 @@ for (var i = 0; i < myPaths.length; i++) {
         var strokeWidth = myPath.strokeWidth;
         var strokeMiterLimit = myPath.strokeMiterLimit;
         result += "Paint " + sPaintName + " = Paint(); \n";
-        result += sPaintName + ".color = Color.fromRGBO(" + strokeColor.red + ", " + strokeColor.green + ", " + strokeColor.blue + ", 1.0); \n";
+        result += sPaintName + ".color = Color.fromRGBO(" + strokeColor.red + ", " + strokeColor.green + ", " + strokeColor.blue + ", " + opacity + "); \n";
         result += sPaintName + ".strokeWidth = " + strokeWidth + "; \n";
         result += sPaintName + ".style = PaintingStyle.stroke; \n";
 
