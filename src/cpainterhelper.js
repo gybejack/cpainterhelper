@@ -70,7 +70,7 @@ function addColor(color, opacity) {
     if (color.typename == "RGBColor") {
         res = "Color.fromRGBO(" + color.red + ", " + color.green + ", " + color.blue + ", " + opacity / 100 + ")";
     } else if (color.typename == "GrayColor") {
-        var gray = 255 - (color.gray * 2.55);
+        var gray = Math.round(255 - (color.gray * 2.55));
         res = "Color.fromRGBO(" + gray + ", " + gray + ", " + gray + ", " + opacity / 100 + ")";
     } else {
         alert("unrecognized color type!");
