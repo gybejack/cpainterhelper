@@ -3,6 +3,14 @@ var myDoc = app.activeDocument;
 var docWidth = myDoc.width;
 var docHeight = myDoc.height;
 var myPaths = myDoc.pathItems;
+var myCompoundPaths = myDoc.compoundPathItems;
+var myCompoundPathsLengths = [];
+for (var i = 0; i < myCompoundPaths.length; i++) {
+    var invertedIndex = ((myCompoundPaths.length - 1) - i);
+    var myCPath = myCompoundPaths[invertedIndex];
+    var cPathLength = myCPath.pathItems.length;
+    myCompoundPathsLengths.push(cPathLength);
+}
 var result = "";
 var xheight = "height * ";
 var xwidth = "width * ";
@@ -71,18 +79,26 @@ function addColor(color, opacity) {
 }
 
 result += "Rect rect = Offset.zero & size; \n";
+
+var currentCompoundPath = 0;
+var currentCompoundPathComponent = 0;
+var pathName = "";
+var paintName = "";
 for (var i = 0; i < myPaths.length; i++) {
     var invertedIndex = ((myPaths.length - 1) - i);
     var myPath = myPaths[invertedIndex];
+    var isCompound = myPath.parent.typename == "CompoundPathItem";
     var isClosed = myPath.closed;
     var isFilled = myPath.filled;
-    var isStroked = myPath.stroked
+    var isStroked = myPath.stroked;
     var opacity = myPath.opacity;
     var myPoints = myPath.pathPoints;
-    var pathName = "path" + i;
-    var paintName = "paint" + i;
-    result += "//Number " + i + "\n";
-    result += "Path " + pathName + " = Path(); \n";
+    if (!isCompound || currentCompoundPathComponent == 0) {
+        pathName = "path" + i;
+        paintName = "paint" + i;
+        result += "//Number " + i + "\n";
+        result += "Path " + pathName + " = Path(); \n";
+    }
     result += pathName + ".moveTo(" + xwidth + getPWidth(myPoints[0].anchor[0]) + " , " + xheight + getPHeight(myPoints[0].anchor[1]) + "); \n";
     for (var j = 1; j < myPoints.length; j++) {
         result += addPathSegment(pathName, myPoints[j - 1], myPoints[j]);
@@ -90,71 +106,81 @@ for (var i = 0; i < myPaths.length; i++) {
     if (isClosed) {
         result += addPathSegment(pathName, myPoints[myPoints.length - 1], myPoints[0]);
     }
-    if (isFilled) {
-        var fPaintName = "f" + paintName;
-        var bgColor;
-        bgColor = myPath.fillColor;
-        result += "Paint " + fPaintName + " = Paint(); \n";
-        if (bgColor.typename == "RGBColor") {
-            result += fPaintName + ".color = " + addColor(bgColor, opacity) + "; \n";
-        } else if (bgColor.typename == "GradientColor") {
-            var gradientName = "fgradient" + i;
-            if (bgColor.gradient.type == "GradientType.RADIAL") {
-                var gcolors = [];
-                var gstops = [];
-                for (var k = 0; k < bgColor.gradient.gradientStops.length; k++) {
-                    var myStop = bgColor.gradient.gradientStops[k];
-                    var newColor = addColor(myStop.color, myStop.opacity);
-                    gcolors.push(newColor);
-                    var newRampStop = "";
-                    newRampStop += myStop.rampPoint / 100;
-                    gstops.push(newRampStop);
+    if (!isCompound || currentCompoundPathComponent == myCompoundPathsLengths[currentCompoundPath] - 1) {
+        if (isFilled) {
+            var fPaintName = "f" + paintName;
+            var bgColor;
+            bgColor = myPath.fillColor;
+            result += "Paint " + fPaintName + " = Paint(); \n";
+            if (bgColor.typename == "RGBColor") {
+                result += fPaintName + ".color = " + addColor(bgColor, opacity) + "; \n";
+            } else if (bgColor.typename == "GradientColor") {
+                var gradientName = "fgradient" + i;
+                if (bgColor.gradient.type == "GradientType.RADIAL") {
+                    var gcolors = [];
+                    var gstops = [];
+                    for (var k = 0; k < bgColor.gradient.gradientStops.length; k++) {
+                        var myStop = bgColor.gradient.gradientStops[k];
+                        var newColor = addColor(myStop.color, myStop.opacity);
+                        gcolors.push(newColor);
+                        var newRampStop = "";
+                        newRampStop += myStop.rampPoint / 100;
+                        gstops.push(newRampStop);
+                    }
+                    result += "var " + gradientName + " = RadialGradient(\ncenter: const Alignment(";
+                    result += (getPWidth(bgColor.origin[0]) * 2 - 1) + ", " + (getPHeight(bgColor.origin[1]) * 2 - 1) + "), \n";
+                    result += "radius: " + bgColor.length / 1000 + ", \n";
+                    result += "colors: [\n";
+                    for (var k = 0; k < gcolors.length; k++) {
+                        result += gcolors[k] + ", \n";
+                    }
+                    result += "], \n"
+                    result += "stops: ["
+                    for (var k = 0; k < gstops.length; k++) {
+                        result += gstops[k] + ", ";
+                    }
+                    result += "],\n);\n";
+                    result += fPaintName + ".shader = " + gradientName + ".createShader(rect); \n";
+
                 }
-                result += "var " + gradientName + " = RadialGradient(\ncenter: const Alignment(";
-                result += (getPWidth(bgColor.origin[0]) * 2 - 1) + ", " + (getPHeight(bgColor.origin[1]) * 2 - 1) + "), \n";
-                result += "radius: " + bgColor.length / 1000 + ", \n";
-                result += "colors: [\n";
-                for (var k = 0; k < gcolors.length; k++) {
-                    result += gcolors[k] + ", \n";
-                }
-                result += "], \n"
-                result += "stops: ["
-                for (var k = 0; k < gstops.length; k++) {
-                    result += gstops[k] + ", ";
-                }
-                result += "],\n);\n";
-                result += fPaintName + ".shader = " + gradientName + ".createShader(rect); \n";
 
             }
 
+
+            result += "canvas.drawPath(" + pathName + ", " + fPaintName + "); \n";
         }
+        if (isStroked) {
+            var sPaintName = "s" + paintName;
+            var strokeColor = new RGBColor();
+            strokeColor = myPath.strokeColor;
+            var strokeCap = myPath.strokeCap;
+            var strokeJoin = myPath.strokeJoin;
+            var strokeWidth = myPath.strokeWidth;
+            var strokeMiterLimit = myPath.strokeMiterLimit;
+            result += "Paint " + sPaintName + " = Paint(); \n";
+            result += sPaintName + ".color = " + addColor(strokeColor, opacity) + "; \n";
+            result += sPaintName + ".strokeWidth = " + strokeWidth + "; \n";
+            if (strokeJoin != "StrokeJoin.MITERENDJOIN") {
+                isRound = strokeJoin == "StrokeJoin.ROUNDENDJOIN";
+                result += sPaintName + ".strokeJoin = " + (isRound ? "StrokeJoin.round" : "StrokeJoin.bevel") + "; \n";
+            }
+            if (strokeCap != "StrokeCap.BUTTENDCAP") {
+                isRound = strokeCap == "StrokeCap.ROUNDENDCAP";
+                result += sPaintName + ".strokeCap = " + (isRound ? "StrokeCap.round" : "StrokeCap.square") + "; \n";
+            }
+            result += sPaintName + ".strokeMiterLimit = " + strokeMiterLimit + "; \n"; //TODO
+            result += sPaintName + ".style = PaintingStyle.stroke; \n";
 
-
-        result += "canvas.drawPath(" + pathName + ", " + fPaintName + "); \n";
+            result += "canvas.drawPath(" + pathName + ", " + sPaintName + "); \n";
+        }
     }
-    if (isStroked) {
-        var sPaintName = "s" + paintName;
-        var strokeColor = new RGBColor();
-        strokeColor = myPath.strokeColor;
-        var strokeCap = myPath.strokeCap;
-        var strokeJoin = myPath.strokeJoin;
-        var strokeWidth = myPath.strokeWidth;
-        var strokeMiterLimit = myPath.strokeMiterLimit;
-        result += "Paint " + sPaintName + " = Paint(); \n";
-        result += sPaintName + ".color = " + addColor(strokeColor, opacity) + "; \n";
-        result += sPaintName + ".strokeWidth = " + strokeWidth + "; \n";
-        if (strokeJoin != "StrokeJoin.MITERENDJOIN") {
-            isRound = strokeJoin == "StrokeJoin.ROUNDENDJOIN";
-            result += sPaintName + ".strokeJoin = " + (isRound ? "StrokeJoin.round" : "StrokeJoin.bevel") + "; \n";
+    if (isCompound) {
+        if (currentCompoundPathComponent == myCompoundPathsLengths[currentCompoundPath] - 1) {
+            currentCompoundPath += 1;
+            currentCompoundPathComponent = 0;
+        } else {
+            currentCompoundPathComponent += 1;
         }
-        if (strokeCap != "StrokeCap.BUTTENDCAP") {
-            isRound = strokeCap == "StrokeCap.ROUNDENDCAP";
-            result += sPaintName + ".strokeCap = " + (isRound ? "StrokeCap.round" : "StrokeCap.square") + "; \n";
-        }
-        result += sPaintName + ".strokeMiterLimit = " + strokeMiterLimit + "; \n"; //TODO
-        result += sPaintName + ".style = PaintingStyle.stroke; \n";
-
-        result += "canvas.drawPath(" + pathName + ", " + sPaintName + "); \n";
     }
     result += "\n";
 }
