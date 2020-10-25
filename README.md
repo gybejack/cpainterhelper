@@ -7,7 +7,7 @@ It is very important that you keep in mind the aspect ratio since the script wil
 
 ![Creation Dialog](/images/doccreate.png) 
 
-Then draw your desired shape with the pen tool. The tool now supports paths, compound paths, and even radial gradients!
+Then draw your desired shape with the pen tool. The tool now supports paths, compound paths, and even radial and linear gradients!
 
 Here are some examples of admissible paths:
 
