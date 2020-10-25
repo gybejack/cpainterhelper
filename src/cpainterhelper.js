@@ -27,6 +27,24 @@ function getPHeight(num) {
     return roundToFour(-num / docHeight);
 }
 
+function addAlignment(point) {
+    var res = "";
+    res += "Alignment(" + (getPWidth(point[0]) * 2 - 1) + ", " + (getPHeight(point[1]) * 2 - 1) + ")";
+    return res;
+}
+
+function getPointFromDistAndAngle(point, distance, angle) {
+    radAngle = angle * Math.PI / 180;
+
+    var x = point[0];
+    var y = point[1];
+
+    var xx = x + (distance * Math.cos(radAngle));
+    var yy = y + (distance * Math.sin(radAngle));
+
+    return [xx, yy];
+}
+
 function checkArrayEqual(arr1, arr2) {
     return arr1[0] == arr2[0] && arr1[1] == arr2[1];
 }
@@ -116,33 +134,37 @@ for (var i = 0; i < myPaths.length; i++) {
                 result += fPaintName + ".color = " + addColor(bgColor, opacity) + "; \n";
             } else if (bgColor.typename == "GradientColor") {
                 var gradientName = "fgradient" + i;
-                if (bgColor.gradient.type == "GradientType.RADIAL") {
-                    var gcolors = [];
-                    var gstops = [];
-                    for (var k = 0; k < bgColor.gradient.gradientStops.length; k++) {
-                        var myStop = bgColor.gradient.gradientStops[k];
-                        var newColor = addColor(myStop.color, myStop.opacity);
-                        gcolors.push(newColor);
-                        var newRampStop = "";
-                        newRampStop += myStop.rampPoint / 100;
-                        gstops.push(newRampStop);
-                    }
-                    result += "var " + gradientName + " = RadialGradient(\ncenter: const Alignment(";
-                    result += (getPWidth(bgColor.origin[0]) * 2 - 1) + ", " + (getPHeight(bgColor.origin[1]) * 2 - 1) + "), \n";
-                    result += "radius: " + bgColor.length / 1000 + ", \n";
-                    result += "colors: [\n";
-                    for (var k = 0; k < gcolors.length; k++) {
-                        result += gcolors[k] + ", \n";
-                    }
-                    result += "], \n"
-                    result += "stops: ["
-                    for (var k = 0; k < gstops.length; k++) {
-                        result += gstops[k] + ", ";
-                    }
-                    result += "],\n);\n";
-                    result += fPaintName + ".shader = " + gradientName + ".createShader(rect); \n";
-
+                var gcolors = [];
+                var gstops = [];
+                for (var k = 0; k < bgColor.gradient.gradientStops.length; k++) {
+                    var myStop = bgColor.gradient.gradientStops[k];
+                    var newColor = addColor(myStop.color, myStop.opacity);
+                    gcolors.push(newColor);
+                    var newRampStop = "";
+                    newRampStop += myStop.rampPoint / 100;
+                    gstops.push(newRampStop);
                 }
+                if (bgColor.gradient.type == "GradientType.RADIAL") {
+                    result += "var " + gradientName + " = RadialGradient(\n";
+                    result += "center: const " + addAlignment(bgColor.origin) + ", \n";
+                    result += "radius: " + bgColor.length / 750 + ", \n";
+                } else if (bgColor.gradient.type == "GradientType.LINEAR") {
+                    var endPoint = getPointFromDistAndAngle(bgColor.origin, bgColor.length, bgColor.angle);
+                    result += "var " + gradientName + " = LinearGradient(\n"
+                    result += "begin: const " + addAlignment(bgColor.origin) + ", \n";
+                    result += "end: const " + addAlignment(endPoint) + ", \n";
+                }
+                result += "colors: [\n";
+                for (var k = 0; k < gcolors.length; k++) {
+                    result += gcolors[k] + ", \n";
+                }
+                result += "], \n"
+                result += "stops: ["
+                for (var k = 0; k < gstops.length; k++) {
+                    result += gstops[k] + ", ";
+                }
+                result += "],\n);\n";
+                result += fPaintName + ".shader = " + gradientName + ".createShader(rect); \n";
 
             }
 
